@@ -10,6 +10,8 @@ Run using NodeJS: node traverseMaze.js
 ## Comments
 Disclaimer: This is my first ever Javascript script and the code is quite messy. This was a learning project.
 
+I screwed up really early on with maze indexing and did not take the time to fix the issue. There is an inconsistency between curPath and maze. maze is indexed by [y][x] while curPath is indexed by [x][y].
+
 I will return to the code soon to clean it up, fix it, and optimize it. 
 
 ## Issues
@@ -30,6 +32,9 @@ As seen in this sequence, going back to the O is required to reach the next Y.
 So for cases where the sequence is a repeating sequence (O G) the algorithm will get stuck if it finds that exact sequence in the maze.
 #### Output.log
 Writing to output.log doesn't work quite right and will produce different output everytime the file is written to. I haven't looked into it very much but I'm assuming there is a timing issue, or I don't fully understand the filesystem. The console output of the sequence of coordinates is consistent and correct.
+
+#### maze[y][x] and curPath[x][y]
+Early on, I realized I had messed up the allocation of the maze array and the indexing was backwards. For curPath (keeping track of the current path) I went with [x][y] indexing.
 
 ## Solution
 Input is given as a text file, taken in as an array. The first line is the sequence to use for solving the maze. 
