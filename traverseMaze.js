@@ -3,20 +3,18 @@
 var _ = require("underscore");
 //http://www.collectionsjs.com/
 var Map = require("collections/map");
-//https://github.com/winstonjs/winston
-var winston = require("winston");
 
 //open file system
 var fs = require("fs");
 //var text = fs.readFileSync("./mazeData_1.txt", "utf-8");
 var text = fs.readFileSync("./mazeData_2.txt", "utf-8");
 
-//Split the text by new lines to get out maze
+//Split the text by new lines to get the maze
 var maze = text.split(/\r|\n|\r\n/);
 //clean the array of any left over empty elements
 maze = cleanArray(maze);
 //Maze is currently an array of strings. Split to get array of characters
-maze = converToFullArray(maze);
+maze = convertToFullArray(maze);
 //size of the SQUARE maze (number of elements) using the first line for reference
 var mazeSize = maze[1].length;
 //Sequence to follow is the first line of the maze file
@@ -30,42 +28,23 @@ var finished = false;
 
 //I screwed up the mazeSize allocation, so having to add 1 because the provided array
 //is actually a 6x5 array instead of the true 5x5, 
-//this is a quick fix
+//TODO: Redo the mazeSize
+//mazeBoard will keep track of invalid/visited spaces so we don't return to them
 var mazeBoard = new Array(mazeSize);
+//mazeBoard array allocation the old fashioned C style - still learning javascript
 for(var y = 0; y < mazeSize + 1; y++)
 {
 	mazeBoard[y] = new Array(mazeSize + 1);
 }
 
-
-/*   GIVING UP ON TUPLE MAPPING FOR NOW
-function Tuple(x, y)
-{
-	this.x = x;
-	this.y = y;
-
-	this.equals = function (tup1, tup2)
-	{
-		if(tup1.x == tup2.x && tup1.y == tup2.y)
-			return true;
-		else
-			return false;
-	};
-}
-
-var m = new Map();
-m.set(new Tuple(1, 2), 1);
-m.set(new Tuple(2, 3), 2);
-var keys = m.keys();
-console.log(keys.next().value);
-*/
-
-//Start the check at the first line
+//BEGIN MAZE TRAVERSAL
 checkLine(maze.length - 1);
-console.log("Finished: " + finished);
+	//console.log("Finished: " + finished);
 
-//THIS IS TOO HACKY WHAT AM I DOING
+//Hacky way of making an output array. 
+//Display provides a visual way to represent the console output
 var display = new Array(mazeSize)
+//display array allocation - doing it the old fashioned way because I'm still learning javascript
 for(var y = 0; y < mazeSize + 1; y++)
 {
 	display[y] = new Array(mazeSize + 1);
@@ -75,6 +54,7 @@ for(var x = 0; x < mazeSize; x++)
 {
 	for(var y = 0; y < mazeSize + 1; y++)
 	{
+		//This first check replaces the sequence line of the input with just underscores
 		if(y == 0)
 			display[y][x] = "_";
 		else
@@ -82,8 +62,10 @@ for(var x = 0; x < mazeSize; x++)
 	}
 }
 
+//index for sequence for output
 var colorPicker = 0;
-curPath.forEach(function(element)
+//Fill the display array with the corrent sequence for visual display purposes
+curPath.forEach(function(element)	//for each element of curPath will return an element array of size 2, element[0] = xCoord, element[1] = yCoord
 {
 	var x = element[0];
 	var y = element[1];
@@ -92,7 +74,7 @@ curPath.forEach(function(element)
 	colorPicker = nextInSeq(colorPicker);
 });
 
-//console.log(display);
+//TODO: Fix the damn file writing, sometimes this first file write happens AFTER line writes
 fs.writeFile("./output.log", "Maze Path\n", function(err)
 {
 	if(err)
@@ -104,6 +86,7 @@ fs.writeFile("./output.log", "Maze Path\n", function(err)
 		console.log("File Written");
 	}
 });
+//writes each line of display to output.log -- currently broken and writes things out of order
 for(var x = 0; x < mazeSize; x++)
 {
 	var outline = display[x];
@@ -124,44 +107,45 @@ for(var x = 0; x < mazeSize; x++)
 //Function to check the first line for a valid move. If found, check neighbors recursively
 function checkLine(y)
 {
-	//current line of the maze using the x coord
+	//current line of the maze using the y coord (goes to the bottom line)
 	var curLine = maze[y];
 	for(var x = 0; x < curLine.length; x++)
 	{
-		//If the current color is valid move, check push to our current path stack and check neighbors
+		//If the current color is valid move, push to our current path stack and check neighbors
 		if(curLine[x] == sequence[seqPos])
 		{
-			//console.log("Found initial move at: (" + x + ", " + y +")");
+				//console.log("Found initial move at: (" + x + ", " + y +")");
 			curPath.push(new Array(x, y));
-			mazeBoard[y][x] = 1;
+			mazeBoard[y][x] = 1; //mark the move as already visited
 			checkNeighbors(x, y, nextInSeq(seqPos));
-			curPath.pop();
+			curPath.pop(); //if failed, pop 
 		}
 	}	
 }
 
-//Check neighbors in left/up/right for valid moves - recursive
-function checkNeighbors(x, y, next, lastX, lastY)
+//Check neighbors in left/up/right/down for valid moves - recursive
+function checkNeighbors(x, y, next, lastX, lastY)	//lastX and lastY are/were used for debugging purposes and old code for position checking
 {
-	//If we have already finished, or reached the end of the maze, set the flag and return
+	//If we have already finished, or reached the end of the maze, return back up
 	if(finished)
 	{
 		return;
 	}
-	console.log("At (" + x + ", " + y + "), CurColor: " + sequence[next] + ", NextColor: " + sequence[nextInSeq(next)]);
+		//console.log("At (" + x + ", " + y + "), CurColor: " + sequence[next] + ", NextColor: " + sequence[nextInSeq(next)]);
 	//Get the neighbors of the current point (bound check the maze walls)
 	var up = (y - 1 >= 1) ? maze[y - 1][x] : "";
 	var left = (x - 1 >= 0) ? maze[y][x-1] : "";
 	var right = (x + 1 < mazeSize) ? maze[y][x+1] : "";
 	var down = (y + 1 <= mazeSize) ? maze[y + 1][x] : ""; //note, the Y distance is actually masesize+1 due to input
+	//spotToMark is used as an alternate way to mark invalid moves at the end, 0 = up, 1 = left, 2 = right, 3 = down
 	var spotToMark = -1;
-	//console.log(left + ", " + up + ", " + right + " NEXT: " + sequence[next] + ", X/lastX " + x + "/" + lastX + ", Y/lastY " + y + "/" + lastY);
+
+		//console.log(left + ", " + up + ", " + right + " NEXT: " + sequence[next] + ", X/lastX " + x + "/" + lastX + ", Y/lastY " + y + "/" + lastY);
+
 	//Below if checks make sure that the neighbor exists, and we havn't finished the maze
 	//We then check if the neighbor is a valid next move or not, if so, call checkNeighbors on the new point
-	//console.log("NextSeq: " + sequence[next]);
 	if (up && !finished && up == sequence[next] && mazeBoard[y - 1][x] != 1)
 	{
-		//console.log("Found neighbor of: (" + x + ", " + y + ") at (" + x + ", " + (y-1) + ")." );
 		curPath.push(new Array(x, y - 1));
 		spotToMark = 0;
 		checkNeighbors(x, y - 1, nextInSeq(next), x, y);
@@ -172,7 +156,6 @@ function checkNeighbors(x, y, next, lastX, lastY)
 		spotToMark = 1;
 		checkNeighbors(x - 1, y, nextInSeq(next), x, y);
 	}
-	//console.log(right == sequence[next] + " " + (x != lastX && y != lastY));
 	if (right && !finished && right == sequence[next] && mazeBoard[y][x + 1] != 1)
 	{
 		curPath.push(new Array(x + 1, y));
@@ -186,6 +169,7 @@ function checkNeighbors(x, y, next, lastX, lastY)
 		checkNeighbors(x,y + 1, nextInSeq(next), x, y);
 	}
 
+	//If we are at the top of the maze, y = 0, we are finished. Push the last point and return
 	if(y - 1 <= 0 && !finished)
 	{
 		finished = true;
@@ -213,8 +197,8 @@ function checkNeighbors(x, y, next, lastX, lastY)
 			default:
 				console.log("Nothin");
 		}
+		//Pop the bad move
 		console.log("Popping: " + curPath.pop());
-		
 	}
 	
 }
@@ -224,11 +208,6 @@ function checkNeighbors(x, y, next, lastX, lastY)
 function nextInSeq(curPos)
 {
 	return curPos = (curPos == sequence.length - 1) ? 0 : curPos + 1;
-}
-
-function lastInSeq(curPos)
-{
-	return curPos = (corPos == 0) ? sequence.length - 1 : curPos - 1;
 }
 
 //Cleans the array of any empty (undefined) elements
@@ -244,7 +223,7 @@ function cleanArray(oldArray)
 }
 
 //Splits an array of strings into an array of characters
-function converToFullArray(oldArray)
+function convertToFullArray(oldArray)
 {
 	var newArray = new Array();
 	for(var i = 0; i < oldArray.length; i++)
