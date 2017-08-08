@@ -11,7 +11,7 @@ Disclaimer: This is my first ever Javascript script and the code is quite messy.
 I will return to the code soon to clean it up, fix it, and optimize it. 
 
 ## Issues
-### Getting stuck
+#### Getting stuck
 If the sequence repeats like in mazeData_1.txt (O G), the algorithm will get stuck going back and forth, for example:
 
 Sequence: O G
@@ -26,7 +26,7 @@ I tried to fix this by immediatly marking visited spots as unvalid moves, howeve
 As seen in this sequence, going back to the O is required to reach the next Y.
 
 So for cases where the sequence is a repeating sequence (O G) the algorithm will get stuck if it finds that exact sequence in the maze.
-### Output.log
+#### Output.log
 Writing to output.log doesn't work quite right and will produce different output everytime the file is written to. I haven't looked into it very much but I'm assuming there is a timing issue, or I don't fully understand the filesystem. The console output of the sequence of coordinates is consistent and correct.
 
 ## Solution
