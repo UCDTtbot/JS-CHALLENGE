@@ -7,23 +7,31 @@ First rough pass at a maze traversal for a color maze given a sequence of colors
 
 ## Comments
 Disclaimer: This is my first ever Javascript script and the code is quite messy. This was a learning project.
+
 I will return to the code soon to clean it up, fix it, and optimize it. 
 
 ## Issues
 ### Getting stuck
 If the sequence repeats like in mazeData_1.txt (O G), the algorithm will get stuck going back and forth, for example:
+
 Sequence: O G
 Row: B O G O Y
+
 The algorithm will do the following: (1, 0) -> (2, 0) -> (1, 0) -> ...
+
 I tried to fix this by immediatly marking visited spots as unvalid moves, however, as described in the problem, the program is allowed to retrace its steps. This is apparent in the solution to mazeData_2.txt as seen below in the following moves:
+
 (4,17)O -> (4,16)R -> (4,17)O -> (5,17)Y -> (5,16)P -> (5,15)O -> ....
+
 As seen in this sequence, going back to the O is required to reach the next Y.
+
 So for cases where the sequence is a repeating sequence (O G) the algorithm will get stuck if it finds that exact sequence in the maze.
 ### Output.log
 Writing to output.log doesn't work quite right and will produce different output everytime the file is written to. I haven't looked into it very much but I'm assuming there is a timing issue, or I don't fully understand the filesystem. The console output of the sequence of coordinates is consistent and correct.
 
 ## Solution
 Input is given as a text file, taken in as an array. The first line is the sequence to use for solving the maze. 
+
 ```
 Input (mazeData_2.txt):
 R O Y P O
@@ -50,6 +58,7 @@ R B B R R R R B B B Y O B G P G G O O Y
 ```
 
 Output:
+
 ```
 Maze Path
 _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
